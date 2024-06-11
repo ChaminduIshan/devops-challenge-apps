@@ -1,0 +1,74 @@
+# main.tf
+# Provider configuration
+provider "aws" {
+  region = "us-west-2" # Change to your desired region
+}
+# VPC
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.0.0"
+  
+  name = "my-vpc"
+  cidr = "10.0.0.0/16"
+  
+  azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+}
+# Security Group for Web App
+resource "aws_security_group" "web_app_sg" {
+  name        = "web-app-sg"
+  description = "Security group for web app"
+  vpc_id      = module.vpc.vpc_id
+  
+  # Define inbound and outbound rules as per your requirements
+  # Example:
+  # ingress {
+  #   from_port   = 80
+  #   to_port     = 80
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
+}
+# Security Group for API
+resource "aws_security_group" "api_sg" {
+  name        = "api-sg"
+  description = "Security group for API"
+  vpc_id      = module.vpc.vpc_id
+  
+  # Define inbound and outbound rules as per your requirements
+}
+# Load Balancer
+resource "aws_lb" "lb" {
+  name               = "my-load-balancer"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.web_app_sg.id] # Adjust as needed
+ 
+  # Define listeners, target groups, etc.
+  # Example:
+  # listener {
+  #   port            = 80
+  #   protocol        = "HTTP"
+  #   default_action {
+  #     target_group_arn = aws_lb_target_group.target_group.arn
+  #     type             = "forward"
+  #   }
+  # }
+}
+
+# ECS Cluster
+resource "aws_ecs_cluster" "ecs_cluster" {
+  name = "my-ecs-cluster"
+}
+
+# ECS Task Definitions and Services for Web App and API
+# Define ECS task definitions, services, and related resources for deploying the web app and API.
+
+# RDS Database
+# Define RDS database instance and related resources.
+
+# Output variables
+output "load_balancer_dns" {
+  value = aws_lb.lb.dns_name
+}
