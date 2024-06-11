@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Install Node.js and NPM
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install Nginx
+sudo apt-get install -y nginx
+
+# Configure Nginx
+sudo cp /path/to/webapp.conf /etc/nginx/sites-available/web.example.com
+sudo cp /path/to/api.conf /etc/nginx/sites-available/api.example.com
+sudo ln -s /etc/nginx/sites-available/web.example.com /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/api.example.com /etc/nginx/sites-enabled/
+sudo systemctl restart nginx
+
+# Install Certbot
+sudo apt-get install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d web.example.com -d api.example.com
