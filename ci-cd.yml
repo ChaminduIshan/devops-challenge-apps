@@ -1,0 +1,32 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Build and push Docker images
+      run: |
+        docker build -t my-web-app:latest ./web-app
+        docker build -t my-api:latest ./api
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker tag my-web-app:latest ${{ secrets.DOCKER_USERNAME }}/my-web-app:latest
+        docker tag my-api:latest ${{ secrets.DOCKER_USERNAME }}/my-api:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/my-web-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/my-api:latest
+
+    - name: Deploy to AWS ECS
+      run: |
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws ecs update-service --cluster my-ecs-cluster --service my-web-app-service --force-new-deployment
+        aws ecs update-service --cluster my-ecs-cluster --service my-api-service --force-new-deployment
